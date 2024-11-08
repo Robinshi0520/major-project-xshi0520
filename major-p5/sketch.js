@@ -6,7 +6,7 @@ let circles = [];
 
 function preload() {
     song = loadSound("assets/boogie-woogie-blues-kingston-city-brotheration-records-163802.mp3");//preload the song
-  }
+  }//preload the music
 
 
 
@@ -61,10 +61,8 @@ function draw() {
     drawCircles(spectrum);
 
     //erase the curtain
-    drawingContext.filter = 'blur(100px)';
     maskGraphics.erase(); 
     maskGraphics.circle(mouseX, mouseY, 50); 
-    drawingContext.filter = 'none';
     maskGraphics.noErase(); 
 
     image(maskGraphics, 0, 0);
@@ -177,9 +175,9 @@ function drawRedBoxes() {
     for (let i = 0; i < yStarts.length; i++) {
         // Place small boxes at the center of each line
         //change the size by fft
-        let spectrumIndex = floor(map(i, 0, yStarts.length, 0, spectrum.length));
-        let sizeFactor = map(spectrum[spectrumIndex], 0, 255, 0.5, 2);
-        let adjusthorizontalRedBoxesWidth = horizontalRedBoxesWidth[i] * sizeFactor;
+        let spectrumIndex = floor(map(i, 0, yStarts.length, 0, spectrum.length));//calculates the closest integer value
+        let sizeFactor = map(spectrum[spectrumIndex], 0, 255, 0.5, 2);//convert the value from one range to another
+        let adjusthorizontalRedBoxesWidth = horizontalRedBoxesWidth[i] * sizeFactor;//change the size according to the audio
         let adjustedhorizontalRedBoxesHeight = horizontalRedBoxesHeight[i] * sizeFactor;
     
         fill(RedBoxesColour);
@@ -300,9 +298,9 @@ function drawBlueBoxes() {
     ]
     for (let i = 0; i < yStarts.length; i++) {
         // Place small boxes at the center of each line
-        let spectrumIndex = floor(map(i, 0, yStarts.length, 0, spectrum.length));
-        let sizeFactor = map(spectrum[spectrumIndex], 0, 255, 0.5, 2);
-        let adjusthorizontalBlueBoxesWidth = horizontalBlueBoxesWidth[i] * sizeFactor;
+        let spectrumIndex = floor(map(i, 0, yStarts.length, 0, spectrum.length));//calculates the closest integer value
+        let sizeFactor = map(spectrum[spectrumIndex], 0, 255, 0.5, 2);//convert the value from one range to another
+        let adjusthorizontalBlueBoxesWidth = horizontalBlueBoxesWidth[i] * sizeFactor;//change the size according to the audio
         let adjusthorizontalBlueBoxesHeight = horizontalBlueBoxesHeight[i] * sizeFactor;
         fill(BlueBoxesColour);
         rect(680 * xStarts[i] - horizontalBlueBoxesWidth[i] / 2, 680 * yStarts[i] - horizontalBlueBoxesHeight[i] / 2, adjusthorizontalBlueBoxesWidth, adjusthorizontalBlueBoxesHeight);
@@ -525,15 +523,16 @@ function otherBox() {
     // }
 }
 
+//add colorful circles
 function drawCircles(spectrum) {
     for (let i = 0; i < circles.length; i++) {
       
       let spectrumIndex = floor(map(i, 0, circles.length, 0, spectrum.length));
-      let spectrumValue = spectrum[spectrumIndex];
+      let spectrumValue = spectrum[spectrumIndex];//get the spectrum value from audion again
     
-      let h = map(spectrumValue, 0, 255, 0, 360);  
-      let s = 59;  
-      let l = 45; 
+      let h = map(spectrumValue, 0, 255, 0, 360); //only the hue of color needs changing
+      let s = 56;  //same value as the red inside the artwork
+      let l = 38; 
   
       fill(h, s, l);
       circle(circles[i].x, circles[i].y, circles[i].radius); 
@@ -541,12 +540,24 @@ function drawCircles(spectrum) {
   }
 
 
+//click and erase the circles
+function mousePressed() {
+  for (let i = circles.length - 1; i >= 0; i--) { 
+    let d = dist(mouseX, mouseY, circles[i].x, circles[i].y);//count the distance and then check if inside a circle
+    if (d < circles[i].radius) {  
+      circles.splice(i, 1);  
+      break;  
+    }
+  }
+}
 
+//responsive design
 function windowResized() {
-    // resizeCanvas(windowWidth, windowHeight);
+    resizeCanvas(windowWidth, windowHeight);
     draw();
 }
 
+//set the button
 function play_pause() {
     if (song.isPlaying()) {
       song.stop();
@@ -555,6 +566,8 @@ function play_pause() {
     }
   }
 
+
+//make difference to music when moving the mouse
 function mouseMoved() {
   // Map the mouseY to a volume value between 0 and 1
   volume = map(mouseY, 0, height, 1, 0);
