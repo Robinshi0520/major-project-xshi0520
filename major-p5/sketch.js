@@ -1,11 +1,14 @@
 
 //create voriables for audios
-let song, analyser;
-let maskGraphics;//add a curtain
+let song, analyser,fft;
+let maskGraphics;//add a curtain 
+let circles = [];
 
 function preload() {
     song = loadSound("assets/boogie-woogie-blues-kingston-city-brotheration-records-163802.mp3");//preload the song
   }
+
+
 
 function setup() {
     createCanvas(680, 680)
@@ -21,11 +24,28 @@ function setup() {
     //analyze the song
     analyser = new p5.Amplitude();
     analyser.setInput(song);
+ 
     //add a play button
     let button = createButton('Play/Pause');
-    button.position(0.1*windowWidth,0.5*windowHeight);
+    button.position(0.075*windowWidth,0.5*windowHeight);
     button.mousePressed(play_pause);
-}
+   
+    //add circles
+    for (let i = 0; i < 10; i++) {
+        let circle = {
+          x: random(width),
+          y: random(height),
+          radius: random(50, 60)
+        };
+        circles.push(circle);
+      }
+    }
+
+
+//creae fft
+fft = new p5.FFT(0.8, 32);
+song.connect(fft);
+
 
 function draw() {
     background(0,0,95);
@@ -36,13 +56,14 @@ function draw() {
     drawRedBoxes();
     drawBlueBoxes();
     drawGrayBoxes();
-    otherBox()
+    otherBox();
+    let spectrum = fft.analyze();
+    drawCircles(spectrum);
 
     //erase the curtain
     drawingContext.filter = 'blur(100px)';
     maskGraphics.erase(); 
-    maskGraphics.circle(mouseX, mouseY, 75); 
-    maskGraphics.stroke(mouseX, mouseY, 75); 
+    maskGraphics.circle(mouseX, mouseY, 50); 
     drawingContext.filter = 'none';
     maskGraphics.noErase(); 
 
@@ -80,6 +101,8 @@ function drawYellowLines() {
 
 function drawRedBoxes() {
     noStroke();
+
+    let spectrum = fft.analyze(); //create spectrum
 
     let RedBoxesColour = [4, 56, 38];
 
@@ -153,8 +176,14 @@ function drawRedBoxes() {
 
     for (let i = 0; i < yStarts.length; i++) {
         // Place small boxes at the center of each line
+        //change the size by fft
+        let spectrumIndex = floor(map(i, 0, yStarts.length, 0, spectrum.length));
+        let sizeFactor = map(spectrum[spectrumIndex], 0, 255, 0.5, 2);
+        let adjusthorizontalRedBoxesWidth = horizontalRedBoxesWidth[i] * sizeFactor;
+        let adjustedhorizontalRedBoxesHeight = horizontalRedBoxesHeight[i] * sizeFactor;
+    
         fill(RedBoxesColour);
-        rect(680 * xStarts[i] - horizontalRedBoxesWidth[i] / 2, 680 * yStarts[i] - horizontalRedBoxesHeight[i] / 2, horizontalRedBoxesWidth[i], horizontalRedBoxesHeight[i]);
+        rect(680 * xStarts[i] - horizontalRedBoxesWidth[i] / 2, 680 * yStarts[i] - horizontalRedBoxesHeight[i] / 2, adjusthorizontalRedBoxesWidth, adjustedhorizontalRedBoxesHeight);
     }
 
 
@@ -215,6 +244,7 @@ function drawRedBoxes() {
 
 function drawBlueBoxes() {
     noStroke();
+    let spectrum = fft.analyze(); //create spectrum
     let BlueBoxesColour = [221, 47, 50];
     let horizontalBlueBoxesWidth = [
         14, 17, 14, 14,
@@ -270,8 +300,12 @@ function drawBlueBoxes() {
     ]
     for (let i = 0; i < yStarts.length; i++) {
         // Place small boxes at the center of each line
+        let spectrumIndex = floor(map(i, 0, yStarts.length, 0, spectrum.length));
+        let sizeFactor = map(spectrum[spectrumIndex], 0, 255, 0.5, 2);
+        let adjusthorizontalBlueBoxesWidth = horizontalBlueBoxesWidth[i] * sizeFactor;
+        let adjusthorizontalBlueBoxesHeight = horizontalBlueBoxesHeight[i] * sizeFactor;
         fill(BlueBoxesColour);
-        rect(680 * xStarts[i] - horizontalBlueBoxesWidth[i] / 2, 680 * yStarts[i] - horizontalBlueBoxesHeight[i] / 2, horizontalBlueBoxesWidth[i], horizontalBlueBoxesHeight[i]);
+        rect(680 * xStarts[i] - horizontalBlueBoxesWidth[i] / 2, 680 * yStarts[i] - horizontalBlueBoxesHeight[i] / 2, adjusthorizontalBlueBoxesWidth, adjusthorizontalBlueBoxesHeight);
     }
 
 
@@ -326,13 +360,16 @@ function drawBlueBoxes() {
 
     for (let i = 0; i < xPositions.length; i++) {
         // Place small boxes at the center of each line
+        //change the size by fft
+       
         fill(BlueBoxesColour);
-        rect(680 * xPositions[i] - verticalBlueBoxesWidth[i] / 2, 680 * yPositions[i] - verticalBlueBoxesHeight[i] / 2, verticalBlueBoxesWidth[i], verticalBlueBoxesHeight[i]);
+        rect(680 * xPositions[i] - verticalBlueBoxesWidth[i] / 2, 680 * yPositions[i] - verticalBlueBoxesHeight[i] / 2,verticalBlueBoxesWidth[i], verticalBlueBoxesHeight[i]);
     }
 }
 
 function drawGrayBoxes() {
     noStroke();
+  
     let GrayBoxesColour = [70, 9, 87];
     let horizontalGrayBoxesWidth = [
         17, 17, 16, 14, 15, 20, 15, 15, 14, 14,
@@ -381,7 +418,7 @@ function drawGrayBoxes() {
     for (let i = 0; i < yStarts.length; i++) {
         // Place small boxes at the center of each line
         fill(GrayBoxesColour);
-        rect(680 * xStarts[i] - horizontalGrayBoxesWidth[i] / 2, 680 * yStarts[i] - horizontalGrayBoxesHeight[i] / 2, horizontalGrayBoxesWidth[i], horizontalGrayBoxesHeight[i]);
+        rect(680 * xStarts[i] - horizontalGrayBoxesWidth[i] / 2, 680 * yStarts[i] - horizontalGrayBoxesHeight[i] / 2, horizontalGrayBoxesWidth, horizontalGrayBoxesHeight);
     }
 
 
@@ -440,6 +477,7 @@ function drawGrayBoxes() {
         fill(GrayBoxesColour);
         rect(680 * xPositions[i] - verticalGrayBoxesWidth[i] / 2, 680 * yPositions[i] - verticalGrayBoxesHeight[i] / 2, verticalGrayBoxesWidth[i], verticalGrayBoxesHeight[i]);
     }
+    
 }
 
 function otherBox() {
@@ -486,6 +524,23 @@ function otherBox() {
     //     rect(680 * xPositions[i] - verticalGrayBoxesWidth[i] / 2, 680 * yPositions[i] - verticalGrayBoxesHeight[i] / 2, verticalGrayBoxesWidth[i], verticalGrayBoxesHeight[i]);
     // }
 }
+
+function drawCircles(spectrum) {
+    for (let i = 0; i < circles.length; i++) {
+      
+      let spectrumIndex = floor(map(i, 0, circles.length, 0, spectrum.length));
+      let spectrumValue = spectrum[spectrumIndex];
+    
+      let h = map(spectrumValue, 0, 255, 0, 360);  
+      let s = 59;  
+      let l = 45; 
+  
+      fill(h, s, l);
+      circle(circles[i].x, circles[i].y, circles[i].radius); 
+    }
+  }
+
+
 
 function windowResized() {
     // resizeCanvas(windowWidth, windowHeight);
