@@ -1,13 +1,35 @@
+
+//create voriables for audios
+let song, analyser;
+let maskGraphics;//add a curtain
+
+function preload() {
+    song = loadSound("assets/boogie-woogie-blues-kingston-city-brotheration-records-163802.mp3");//preload the song
+  }
+
 function setup() {
     createCanvas(680, 680)
     colorMode(HSL);//i changed the color mode here for eaiser adjustmemt
+    //make the curtain
+    maskGraphics = createGraphics(680,680);
+    maskGraphics.fill(115,2,6,247); 
+    maskGraphics.stroke("black"); 
+    maskGraphics.strokeWeight(10); 
+    maskGraphics.rect(0, 0, 680, 680); 
+  
 
-    noLoop();
+    //analyze the song
+    analyser = new p5.Amplitude();
+    analyser.setInput(song);
+    //add a play button
+    let button = createButton('Play/Pause');
+    button.position(0.1*windowWidth,0.5*windowHeight);
+    button.mousePressed(play_pause);
 }
 
 function draw() {
     background(0,0,95);
-    stroke(52, 79, 55);
+    
     strokeCap(SQUARE)
 
     drawYellowLines();
@@ -15,8 +37,16 @@ function draw() {
     drawBlueBoxes();
     drawGrayBoxes();
     otherBox()
-    // drawYellowBoxes();
 
+    //erase the curtain
+    drawingContext.filter = 'blur(100px)';
+    maskGraphics.erase(); 
+    maskGraphics.circle(mouseX, mouseY, 75); 
+    maskGraphics.stroke(mouseX, mouseY, 75); 
+    drawingContext.filter = 'none';
+    maskGraphics.noErase(); 
+
+    image(maskGraphics, 0, 0);
 }
 
 function drawYellowLines() {
@@ -29,7 +59,7 @@ function drawYellowLines() {
 
 
     for (let i = 0; i < yPositions.length; i++) {
-
+        stroke(52, 79, 55);
         strokeWeight(horizontalStrokes[i]);
         line(xStarts[i] * 680, 680 * yPositions[i], 680 * xLength[i], 680 * yPositions[i]);
 
@@ -460,4 +490,22 @@ function otherBox() {
 function windowResized() {
     // resizeCanvas(windowWidth, windowHeight);
     draw();
+}
+
+function play_pause() {
+    if (song.isPlaying()) {
+      song.stop();
+    } else {
+      song.loop();
+    }
+  }
+
+function mouseMoved() {
+  // Map the mouseY to a volume value between 0 and 1
+  volume = map(mouseY, 0, height, 1, 0);
+  song.setVolume(volume);
+
+  // Map the mouseX to a pan value between -1 and 1
+  pan = map(mouseX, 0, width, -1, 1);
+  song.pan(pan);
 }
